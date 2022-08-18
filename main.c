@@ -86,19 +86,25 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Missing file operand\n");
     return EXIT_FAILURE;
   }
-  FILE *input = fopen(argv[1], "r");
+  FILE *inputStream = fopen(argv[1], "r");
+  fseek(inputStream, 0, SEEK_END);
+  size_t inputSize = ftell(inputStream);
+  rewind(inputStream);
+  char *input = malloc(inputSize * sizeof(char));
+  inputSize = fread(input, sizeof(char), inputSize, inputStream);
+  fclose(inputStream);
   struct stack stack;
   stack.top = 0;
-  int c;
-  while ((c = getc(input)) != -1) {
+  for (size_t offset = 0; offset < inputSize; offset++) {
+    char c = input[offset];
     if (c <=CHAR_MAX && handlers[c]) {
       handlers[c](&stack);
     }else {
       fprintf(stderr, "Unknown character %c\n", c);
-      fclose(input);
+      free(input);
       return EXIT_FAILURE;
     }
   }
-  fclose(input);
+  free(input);
   return 0;
 }
