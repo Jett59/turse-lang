@@ -82,18 +82,23 @@ static Handler handlers[CHAR_MAX + 1] = {
     ['|'] = handlePrintChar, ['\\'] = handlePrintHexChar};
 
 int main(int argc, char **argv) {
+  if (argc < 2) {
+    fprintf(stderr, "Missing file operand\n");
+    return EXIT_FAILURE;
+  }
+  FILE *input = fopen(argv[1], "r");
   struct stack stack;
   stack.top = 0;
-  for (int i = 1; i < argc; i++) {
-    for (char *c = argv[i]; *c; c++) {
-      Handler handler = handlers[*c];
-      if (handler) {
-        handler(&stack);
-      } else {
-        fprintf(stderr, "Unknown character: %c\n", *c);
-        exit(EXIT_FAILURE);
-      }
+  int c;
+  while ((c = getc(input)) != -1) {
+    if (c <=CHAR_MAX && handlers[c]) {
+      handlers[c](&stack);
+    }else {
+      fprintf(stderr, "Unknown character %c\n", c);
+      fclose(input);
+      return EXIT_FAILURE;
     }
   }
+  fclose(input);
   return 0;
 }
